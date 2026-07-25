@@ -56,7 +56,7 @@ const CURATED_SITES = [
     { name: 'BBC News', domain: 'bbc.co.uk' },
     { name: 'The Guardian', domain: 'theguardian.com' },
     { name: 'Sky News', domain: 'news.sky.com' },
-    { name: 'Reuters', domain: 'reuters.com' },
+    { name: 'NPR', domain: 'npr.org' },
     { name: 'Al Jazeera', domain: 'aljazeera.com' }
   ]},
   { category: 'Tech', items: [
@@ -68,13 +68,12 @@ const CURATED_SITES = [
   ]},
   { category: 'Sports', items: [
     { name: 'BBC Sport', domain: 'bbc.co.uk', path: '/sport' },
-    { name: 'Sky Sports', domain: 'skysports.com' },
-    { name: 'ESPN', domain: 'espn.com' }
+    { name: 'Sky Sports', domain: 'skysports.com' }
   ]},
   { category: 'Science & Space', items: [
     { name: 'NASA', domain: 'nasa.gov' },
-    { name: 'National Geographic', domain: 'nationalgeographic.com' },
-    { name: 'Scientific American', domain: 'scientificamerican.com' }
+    { name: 'Scientific American', domain: 'scientificamerican.com' },
+    { name: 'Phys.org', domain: 'phys.org' }
   ]}
 ];
 
@@ -214,14 +213,30 @@ function looksLikeFeed(text){
   return head.includes('<rss') || head.includes('<feed') || head.includes('<?xml');
 }
 
-// A handful of well-known sites host their real feed on a different
-// subdomain than the site itself (same-origin guessing can never find
-// these), each hand-verified rather than guessed.
+// Every curated site plus a few others, each individually curl-verified to
+// return real RSS/Atom XML (not guessed) - most of these don't publish a
+// discoverable <link rel="alternate"> or live at a well-known same-origin
+// path, so auto-discovery alone found barely half of the curated list in
+// testing. Keyed by hostname + path (not just hostname) since some sites -
+// BBC News vs BBC Sport - use the same domain for entirely different feeds.
 const KNOWN_FEED_HINTS = {
   'news.sky.com': 'https://feeds.skynews.com/feeds/rss/home.xml',
   'skynews.com': 'https://feeds.skynews.com/feeds/rss/home.xml',
   'bbc.co.uk': 'https://feeds.bbci.co.uk/news/rss.xml',
-  'bbc.com': 'https://feeds.bbci.co.uk/news/rss.xml'
+  'bbc.com': 'https://feeds.bbci.co.uk/news/rss.xml',
+  'bbc.co.uk/sport': 'https://feeds.bbci.co.uk/sport/rss.xml',
+  'bbc.com/sport': 'https://feeds.bbci.co.uk/sport/rss.xml',
+  'theguardian.com': 'https://www.theguardian.com/international/rss',
+  'npr.org': 'https://feeds.npr.org/1001/rss.xml',
+  'aljazeera.com': 'https://www.aljazeera.com/xml/rss/all.xml',
+  'arstechnica.com': 'https://arstechnica.com/feed/',
+  'techcrunch.com': 'https://techcrunch.com/feed/',
+  'wired.com': 'https://www.wired.com/feed/rss',
+  'zdnet.com': 'https://www.zdnet.com/news/rss.xml',
+  'skysports.com': 'https://www.skysports.com/rss/12040',
+  'nasa.gov': 'https://www.nasa.gov/feed/',
+  'scientificamerican.com': 'https://www.scientificamerican.com/platform/syndication/rss/',
+  'phys.org': 'https://phys.org/rss-feed/'
 };
 
 async function discoverFeed(origin, hintPath){
@@ -232,7 +247,9 @@ async function discoverFeed(origin, hintPath){
   let hostname;
   try{ hostname = new URL(origin).hostname.replace(/^www\./, ''); }catch(e){ hostname = ''; }
   const candidates = [];
-  if(KNOWN_FEED_HINTS[hostname]) candidates.push(KNOWN_FEED_HINTS[hostname]);
+  const hintKey = hostname + (hintPath || '');
+  if(KNOWN_FEED_HINTS[hintKey]) candidates.push(KNOWN_FEED_HINTS[hintKey]);
+  else if(KNOWN_FEED_HINTS[hostname]) candidates.push(KNOWN_FEED_HINTS[hostname]);
   if(hintPath){
     const trimmed = hintPath.replace(/\/$/, '');
     candidates.push(origin + trimmed + '/.rss');
