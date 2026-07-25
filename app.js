@@ -13,7 +13,7 @@ function currentTheme(){
   let stored = null;
   try{ stored = localStorage.getItem(THEME_KEY); }catch(e){}
   if(stored === 'light' || stored === 'dark') return stored;
-  return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return 'light'; // default for first-time visitors; dark stays a click away
 }
 applyTheme(currentTheme());
 $('#themeToggleBtn').addEventListener('click', () => {
