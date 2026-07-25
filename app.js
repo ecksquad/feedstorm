@@ -173,13 +173,16 @@ function restoreSelected(){
    through a small dedicated proxy sidesteps that. Tried public free
    CORS-relay services first (allorigins.win etc.) - all failed in testing
    (down, 403, 522, timeout) within minutes of each other, which isn't bad
-   luck, it's what free/unauthenticated proxy services are like. This one
-   is a tiny Flask route on the same Pi the car/house app already runs on
-   (see feedproxy_server.py), exposed publicly via Tailscale Funnel - a
-   short-term call while this is small; if Feedstorm ever gets real
-   traffic, this should move to its own separate hosting rather than
-   riding on personal home infrastructure. */
-const CORS_PROXY = 'https://magicmirroros.tail655aa9.ts.net/feedproxy?url=';
+   luck, it's what free/unauthenticated proxy services are like. A first
+   version of this proxy ran on a home Raspberry Pi behind Tailscale Funnel,
+   which worked in local testing but breaks for every real visitor: the
+   Funnel hostname resolves into a private/CGNAT address range, and Chrome/
+   Edge's Local Network Access policy (Chrome 142+) blocks a public page
+   from fetching a private-network address unless the user approves a
+   permission prompt - which plain fetch() can never trigger or wait for.
+   Moved to a Cloudflare Worker (worker/src/index.js), which has an
+   ordinary public IP, so that restriction never applies. */
+const CORS_PROXY = 'https://feedstorm-proxy.ecksquad.workers.dev/?url=';
 function viaProxy(url){ return CORS_PROXY + encodeURIComponent(url); }
 
 function getFeedCache(){

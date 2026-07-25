@@ -32,23 +32,34 @@ A handful of sites (confirmed: Engadget, Reddit's `.rss` endpoint) return
 
 - `index.html` / `app.js` - the whole front end: curated site picker, manual
   add, RSS/Atom discovery + parsing, the feed grid, light/dark mode.
-- `feedproxy_server.py` - a small Flask route that fetches a feed URL
+- `worker/src/index.js` - a small Cloudflare Worker that fetches a feed URL
   server-side and returns it with a permissive CORS header. Needed because
   this is a plain website: its own fetch() calls are subject to normal CORS
   rules, and most sites don't send headers letting another origin read
-  their response. Public CORS-relay services (allorigins.win etc.) were
-  tried first and all failed within minutes of each other in testing - down,
-  403, 522, timeout - which is typical of free/unauthenticated proxy
-  services, not something worth depending on.
-- Currently deployed on the same Raspberry Pi the developer's car/house
-  control app runs on, exposed publicly via Tailscale Funnel
-  (`https://magicmirroros.tail655aa9.ts.net/feedproxy`). **This is a
-  short-term call while Feedstorm is small** - if it ever gets real
-  traffic, the proxy should move to its own separate hosting (e.g. a
-  Cloudflare Worker) rather than riding on personal home infrastructure.
+  their response. Deployed at `https://feedstorm-proxy.ecksquad.workers.dev`.
+  Public CORS-relay services (allorigins.win etc.) were tried first and all
+  failed within minutes of each other in testing - down, 403, 522, timeout -
+  typical of free/unauthenticated proxy services, not something worth
+  depending on.
+- An earlier version of this proxy ran as a Flask route (`feedproxy_server.py`,
+  kept for reference) on a home Raspberry Pi, exposed via Tailscale Funnel.
+  That worked in local testing but silently broke for every real visitor:
+  the Funnel hostname resolves into a private/CGNAT address range, and
+  Chrome/Edge's Local Network Access policy (shipped Chrome 142) blocks a
+  public page from fetching a private-network address unless the user
+  approves a permission prompt - which a plain `fetch()` call can never
+  trigger or wait for. Moved to a Cloudflare Worker, which has an ordinary
+  public IP, so that restriction never applies.
 - `manifest.json` / `sw.js` - installable as a PWA (add to home screen),
   works offline for the app shell.
 - `gen_icons.ps1` - regenerates everything in `icons/` if the design changes.
+
+### Deploying the worker
+
+```
+cd worker
+wrangler deploy
+```
 
 ## Local development
 

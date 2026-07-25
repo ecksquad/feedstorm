@@ -28,6 +28,10 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "*"
+    # This box's address is in Tailscale's CGNAT range, so Chrome/Edge's Local
+    # Network Access policy blocks fetch() to it from a public page (like the
+    # GitHub Pages site) unless the preflight response explicitly allows it.
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
     return response
 
 
