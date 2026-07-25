@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Feedstorm",
+  "short_name": "Feedstorm",
+  "version": "0.1.0",
+  "description": "Turns your most-visited sites into one custom feed - your picks, your layout, your pace.",
+  "permissions": ["history", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Open Feedstorm"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
