@@ -113,7 +113,8 @@ function renderCuratedList(){
         selected.delete(key);
         chip.classList.remove('active');
       } else {
-        const entry = { domain: key, favicon: faviconUrl(site.domain), manual: !!site.path };
+        const group = CURATED_SITES.find(g => g.items.some(s => siteKey(s) === key));
+        const entry = { domain: key, favicon: faviconUrl(site.domain), manual: !!site.path, category: group ? group.category : null };
         if(site.path) entry.originHint = 'https://' + site.domain + site.path;
         selected.set(key, entry);
         chip.classList.add('active');
@@ -341,6 +342,21 @@ function firstMediaImage(node){
   return null;
 }
 
+// dc:creator is namespaced like media:content/media:thumbnail above -
+// getElementsByTagName again, not querySelector. Atom's <author> nests a
+// <name>, RSS's is a bare text node - handle both.
+function authorOf(node){
+  const dc = node.getElementsByTagName('dc:creator')[0];
+  if(dc && dc.textContent.trim()) return dc.textContent.trim();
+  const authorEl = node.getElementsByTagName('author')[0];
+  if(authorEl){
+    const nameEl = authorEl.getElementsByTagName('name')[0];
+    if(nameEl && nameEl.textContent.trim()) return nameEl.textContent.trim();
+    if(authorEl.textContent.trim()) return authorEl.textContent.trim();
+  }
+  return '';
+}
+
 function parseFeedXml(xmlText, sourceMeta){
   const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
   if(doc.querySelector('parsererror')) return [];
@@ -359,7 +375,7 @@ function parseFeedXml(xmlText, sourceMeta){
       posts.push({
         title, link, pubDate: pubDate ? new Date(pubDate) : null,
         snippet: description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220),
-        image, source: sourceMeta
+        image, author: authorOf(item), source: sourceMeta
       });
     });
     return posts;
@@ -376,7 +392,7 @@ function parseFeedXml(xmlText, sourceMeta){
     posts.push({
       title, link, pubDate: pubDate ? new Date(pubDate) : null,
       snippet: summary.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220),
-      image, source: sourceMeta
+      image, author: authorOf(entry), source: sourceMeta
     });
   });
   return posts;
@@ -417,6 +433,18 @@ async function buildFeed(){
 
   const failed = results.filter(r => !r.ok);
   results.forEach(r => allPosts.push(...r.posts));
+
+  // Real feeds occasionally republish the same story as two separate <item>
+  // entries (confirmed against BBC's own feed, not a parsing bug on our
+  // side) - drop exact repeats rather than showing the same headline twice.
+  const seenPosts = new Set();
+  allPosts = allPosts.filter(p => {
+    const dedupeKey = p.link || (p.source.domain + '|' + p.title);
+    if(seenPosts.has(dedupeKey)) return false;
+    seenPosts.add(dedupeKey);
+    return true;
+  });
+
   allPosts.sort((a, b) => (b.pubDate ? b.pubDate.getTime() : 0) - (a.pubDate ? a.pubDate.getTime() : 0));
 
   renderFilterRow(sources, results);
@@ -456,6 +484,19 @@ function timeAgo(date){
   return Math.round(hours / 24) + 'd ago';
 }
 
+// Real news sites don't render every story at the same size - a lead story,
+// a row of featured ones, then a scannable list (confirmed against
+// engadget.com's actual layout: hero + staggered grid + varied card sizes,
+// category tags, bylines). A flat list of identical rows reads as
+// "generated," not edited - this tiers the same data into that shape
+// instead of inventing content that isn't there.
+const CATEGORY_COLORS = {
+  'News': '#3b82f6',
+  'Tech': '#8b5cf6',
+  'Sports': '#f59e0b',
+  'Science & Space': '#10b981'
+};
+
 function renderPosts(){
   const body = $('#feedBody');
   const list = activeSourceFilter ? allPosts.filter(p => p.source.domain === activeSourceFilter) : allPosts;
@@ -463,24 +504,74 @@ function renderPosts(){
     body.innerHTML = `<div class="empty-hint">No posts to show yet - try picking a few more sources.</div>`;
     return;
   }
-  body.innerHTML = `<div class="post-list">${list.map(postCardHtml).join('')}</div>`;
+
+  const hero = list[0];
+  const featured = list.slice(1, 5);
+  const rest = list.slice(5);
+
+  body.innerHTML = `
+    ${hero ? postCardHtml(hero, 'hero') : ''}
+    ${featured.length ? `<div class="post-featured-grid">${featured.map(p => postCardHtml(p, 'featured')).join('')}</div>` : ''}
+    ${rest.length ? `<div class="post-list">${rest.map(p => postCardHtml(p, 'row')).join('')}</div>` : ''}
+  `;
 }
 
 function escapeHtml(s){
   return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function postCardHtml(p){
+function categoryTagHtml(category){
+  if(!category) return '';
+  const color = CATEGORY_COLORS[category] || '#6b7280';
+  return `<span class="cat-tag" style="--tag-color:${color}">${escapeHtml(category)}</span>`;
+}
+
+function bylineHtml(p){
+  const parts = [];
+  if(p.author) parts.push('By ' + escapeHtml(p.author));
+  const t = timeAgo(p.pubDate);
+  if(t) parts.push(t);
+  return parts.join(' · ');
+}
+
+function postCardHtml(p, size){
   const thumb = p.image
     ? `<img class="thumb" src="${escapeHtml(p.image)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;thumb none&quot;>📰</div>'">`
     : `<div class="thumb none">📰</div>`;
-  return `<a class="post-card" href="${escapeHtml(p.link)}" target="_blank" rel="noopener">
+  const srcLine = `<div class="post-src"><img src="${p.source.favicon}" alt="">${escapeHtml(p.source.domain)}</div>`;
+
+  if(size === 'hero'){
+    return `<a class="post-card post-hero" href="${escapeHtml(p.link)}" target="_blank" rel="noopener">
+      ${thumb}
+      <div class="body">
+        ${categoryTagHtml(p.source.category)}
+        ${srcLine}
+        <div class="post-title">${escapeHtml(p.title)}</div>
+        <div class="post-snip">${escapeHtml(p.snippet)}</div>
+        <div class="post-time">${bylineHtml(p)}</div>
+      </div>
+    </a>`;
+  }
+
+  if(size === 'featured'){
+    return `<a class="post-card post-featured" href="${escapeHtml(p.link)}" target="_blank" rel="noopener">
+      ${thumb}
+      <div class="body">
+        ${categoryTagHtml(p.source.category)}
+        ${srcLine}
+        <div class="post-title">${escapeHtml(p.title)}</div>
+        <div class="post-time">${bylineHtml(p)}</div>
+      </div>
+    </a>`;
+  }
+
+  return `<a class="post-card post-row" href="${escapeHtml(p.link)}" target="_blank" rel="noopener">
     ${thumb}
     <div class="body">
-      <div class="post-src"><img src="${p.source.favicon}" alt="">${escapeHtml(p.source.domain)}</div>
+      <div class="post-src">${categoryTagHtml(p.source.category)}<img src="${p.source.favicon}" alt="">${escapeHtml(p.source.domain)}</div>
       <div class="post-title">${escapeHtml(p.title)}</div>
       <div class="post-snip">${escapeHtml(p.snippet)}</div>
-      <div class="post-time">${timeAgo(p.pubDate)}</div>
+      <div class="post-time">${bylineHtml(p)}</div>
     </div>
   </a>`;
 }
