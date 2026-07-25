@@ -1,23 +1,20 @@
 # Feedstorm
 
-A browser extension that turns your most-visited sites into one custom feed.
+Pick your favourite sites and Feedstorm blends their latest posts - photos,
+headlines, everything - into one feed. Live at
+**https://ecksquad.github.io/feedstorm/** - just open it, no install, no
+account, no permissions to approve.
 
-Feedstorm looks at *your own browsing history* (nothing leaves your browser)
-to find the sites you actually visit, lets you pick which ones to include with
-a checkbox list, then pulls their latest posts - photos, headlines, snippets -
-into one unified, sortable feed. Light and dark mode.
+## Why it works this way
 
-## Why an extension, not a website
-
-A plain website can never read your browsing history or most-visited sites -
-that's a hard browser privacy boundary, not a missing feature. Only a browser
-extension can request that permission, with an explicit install-time consent
-prompt. That's the whole reason this is a `.crx`-style unpacked extension
-rather than a hosted webpage like this developer's other projects.
-
-It also means feed-fetching needs no server/proxy: an extension page with
-`host_permissions` can fetch other sites directly, bypassing the CORS
-restrictions a normal website would hit.
+An earlier version of this was a browser extension that could read your real
+browsing history to find your most-visited sites automatically. That's
+genuinely the only way to get *automatic* site detection - a plain webpage
+can never read browsing history, full stop - but it meant developer-mode
+installs and eventually a store listing + review just to try it. Too much
+friction for what this is. This version trades the automatic detection for a
+curated checklist (News/Tech/Sports/Science, tap to add) plus a manual
+"add any site" box - nearly as fast to set up, and it's just a link.
 
 ## Scope
 
@@ -29,36 +26,36 @@ TikTok or X - those block automated access and require paid, restricted
 official APIs per platform.
 
 A handful of sites (confirmed: Engadget, Reddit's `.rss` endpoint) return
-403 to automated fetches outright, likely bot-protection that may behave
-differently for a real signed-in browser session than it did in headless
-testing - not a bug in Feedstorm, just something those specific sites block.
+403 to automated fetches outright - bot protection, not a Feedstorm bug.
 
-## Installing (unpacked, for now)
+## Architecture
 
-1. Open `edge://extensions` (or `chrome://extensions`).
-2. Enable **Developer mode** (top right).
-3. **Load unpacked** → select this folder.
-4. Click the Feedstorm icon in the toolbar.
+- `index.html` / `app.js` - the whole front end: curated site picker, manual
+  add, RSS/Atom discovery + parsing, the feed grid, light/dark mode.
+- `feedproxy_server.py` - a small Flask route that fetches a feed URL
+  server-side and returns it with a permissive CORS header. Needed because
+  this is a plain website: its own fetch() calls are subject to normal CORS
+  rules, and most sites don't send headers letting another origin read
+  their response. Public CORS-relay services (allorigins.win etc.) were
+  tried first and all failed within minutes of each other in testing - down,
+  403, 522, timeout - which is typical of free/unauthenticated proxy
+  services, not something worth depending on.
+- Currently deployed on the same Raspberry Pi the developer's car/house
+  control app runs on, exposed publicly via Tailscale Funnel
+  (`https://magicmirroros.tail655aa9.ts.net/feedproxy`). **This is a
+  short-term call while Feedstorm is small** - if it ever gets real
+  traffic, the proxy should move to its own separate hosting (e.g. a
+  Cloudflare Worker) rather than riding on personal home infrastructure.
+- `manifest.json` / `sw.js` - installable as a PWA (add to home screen),
+  works offline for the app shell.
+- `gen_icons.ps1` - regenerates everything in `icons/` if the design changes.
 
-## How it works
+## Local development
 
-- **Scan my history**: reads the last 90 days of browsing history via the
-  `history` permission, groups by domain, ranks by visit count. Nothing is
-  read automatically in the background - only when you tap the button.
-- **Add a site by hand**: paste any domain, or a specific page (like a
-  subreddit) - Feedstorm tries to auto-discover its RSS/Atom feed.
-- **Build my Feedstorm**: fetches and merges every selected source's feed,
-  sorted newest-first (most feeds don't expose view counts, so recency is
-  the reliable, universal signal), with filter chips to view one source at
-  a time.
-- Discovered feed URLs are cached (`chrome.storage.local`) so re-building
-  doesn't re-run discovery every time.
+Any static file server works, e.g.:
 
-## Files
+```
+node -e "require('http').createServer((req,res)=>{const fs=require('fs');const path=require('path');let p=req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0];fs.readFile(path.join(__dirname,p),(e,d)=>{if(e){res.writeHead(404);res.end();return}res.end(d)})}).listen(8420)"
+```
 
-- `manifest.json` - Manifest V3 extension definition
-- `background.js` - opens the app as a real tab (not a cramped popup) on
-  icon click
-- `app.html` / `app.js` - the whole app: history scan, feed discovery,
-  RSS/Atom parsing, rendering, theme toggle
-- `gen_icons.ps1` - regenerates `icons/` if the design changes
+then open `http://127.0.0.1:8420/index.html`.

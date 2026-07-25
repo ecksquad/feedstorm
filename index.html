@@ -2,7 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d18">
 <title>Feedstorm</title>
+<meta name="description" content="Pick your favourite sites and Feedstorm blends their latest posts - photos, headlines, everything - into one feed.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Feedstorm">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -78,21 +88,20 @@
   .scan-card p{font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5}
   .empty-hint{font-size:13px;color:var(--faint);text-align:center;padding:26px 10px}
 
-  .domain-list{display:flex;flex-direction:column;gap:2px;max-height:420px;overflow-y:auto;
-    margin:14px -6px 0;padding:0 6px}
-  .domain-row{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;
-    cursor:pointer;transition:background .15s ease}
-  .domain-row:hover{background:var(--card-2)}
-  .domain-row input{width:19px;height:19px;accent-color:var(--grad-a);cursor:pointer;flex:none}
-  .domain-row img{width:22px;height:22px;border-radius:6px;flex:none;background:var(--card-2);object-fit:cover}
-  .domain-row .dn{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis}
-  .domain-row .dv{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;flex:none}
-  .feed-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
-    padding:2px 7px;border-radius:999px;flex:none}
-  .feed-tag.found{background:color-mix(in srgb, #22c55e 20%, transparent);color:#22c55e}
-  .feed-tag.checking{background:color-mix(in srgb, var(--grad-b) 20%, transparent);color:var(--grad-b)}
-  .feed-tag.none{background:color-mix(in srgb, var(--faint) 20%, transparent);color:var(--faint)}
+  .cat-group{margin:16px 0 4px}
+  .cat-group:first-child{margin-top:14px}
+  .cat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--faint);margin-bottom:8px}
+  .site-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .site-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card-2);
+    border-radius:999px;padding:8px 14px 8px 8px;cursor:pointer;font:inherit;font-size:13.5px;font-weight:600;
+    color:var(--ink);transition:all .15s ease}
+  .site-chip:hover{transform:translateY(-2px);border-color:color-mix(in srgb, var(--grad-b) 45%, var(--line))}
+  .site-chip img{width:20px;height:20px;border-radius:6px;flex:none;background:var(--card);object-fit:cover}
+  .site-chip .tick{display:none;font-size:12px}
+  .site-chip.active{border-color:transparent;color:#fff;
+    background:linear-gradient(120deg,var(--grad-a),var(--grad-c))}
+  .site-chip.active .tick{display:inline}
 
   .manual-row{display:flex;gap:8px;margin-top:16px}
   .manual-row input{flex:1;min-width:0;background:var(--card-2);border:1px solid var(--line);
@@ -152,27 +161,27 @@
     <div class="logo"><span class="bolt">⚡</span><b>Feedstorm</b></div>
     <div class="h-actions">
       <button class="pill-btn" id="manageBtn" hidden>⚙️ Manage sources</button>
+      <button class="pill-btn" id="installBtn" hidden>📲 Install</button>
       <button class="icon-btn" id="themeToggleBtn" title="Light / dark">🌙</button>
     </div>
   </header>
 
   <!-- ---------- Setup view ---------- -->
   <section class="view active" id="view-setup">
-    <p class="lead">Feedstorm looks at <b>your own browsing history</b> - nothing leaves this browser - to find the
-      sites you actually visit, then blends the ones you pick into one storm of headlines, photos and posts.</p>
+    <p class="lead">Pick a few of your favourite sites below (or add your own), and Feedstorm blends their
+      latest posts - photos, headlines, everything - into <b>one feed</b> you can flip through in seconds.</p>
 
     <div class="scan-card">
-      <h2>Your most-visited sites</h2>
-      <p>Nothing is read until you tap this - Feedstorm never scans silently in the background.</p>
-      <button class="pill-btn primary" id="scanBtn">🔍 Scan my history</button>
-      <div class="domain-list" id="domainList"></div>
+      <h2>Pick your sites</h2>
+      <p>Tap any of these to add them - tap again to remove.</p>
+      <div id="curatedList"></div>
     </div>
 
     <div class="scan-card">
       <h2>Add a site by hand</h2>
       <p>Know the address of a blog, channel or subreddit? Drop it in - works for anything with an RSS/Atom feed.</p>
       <div class="manual-row">
-        <input type="text" id="manualUrl" placeholder="e.g. engadget.com, skynews.com, reddit.com/r/technology…">
+        <input type="text" id="manualUrl" placeholder="e.g. arstechnica.com, reddit.com/r/technology…">
         <button class="pill-btn" id="manualAddBtn">Add</button>
       </div>
     </div>

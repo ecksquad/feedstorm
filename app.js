@@ -41,76 +41,80 @@ $('#manageBtn').addEventListener('click', () => showView('setup'));
 /* ---------------- state ---------------- */
 // selected sources: Map<key, {domain, favicon, manual, originHint?}>
 const selected = new Map();
-let domainCandidates = []; // [{domain, visitCount}] from the last history scan
 
 const STORAGE_KEY = 'feedstorm_sources';
 const FEED_CACHE_KEY = 'feedstorm_feedCache';
 
-/* ---------------- history scan ---------------- */
-function hostnameOf(url){
-  try{ return new URL(url).hostname.replace(/^www\./, ''); }
-  catch(e){ return null; }
-}
-function isIgnorable(hostname){
-  if(!hostname) return true;
-  if(hostname === 'localhost') return true;
-  if(hostname.endsWith('.local')) return true;
-  return false;
-}
-
-async function scanHistory(){
-  const btn = $('#scanBtn');
-  btn.disabled = true; btn.textContent = 'Scanning…';
-  try{
-    const items = await chrome.history.search({
-      text: '', startTime: Date.now() - 90 * 24 * 3600 * 1000, maxResults: 5000
-    });
-    const byHost = new Map();
-    for(const item of items){
-      const host = hostnameOf(item.url);
-      if(isIgnorable(host)) continue;
-      byHost.set(host, (byHost.get(host) || 0) + (item.visitCount || 1));
-    }
-    domainCandidates = Array.from(byHost.entries())
-      .map(([domain, visitCount]) => ({ domain, visitCount }))
-      .sort((a, b) => b.visitCount - a.visitCount)
-      .slice(0, 40);
-    renderDomainList();
-    if(domainCandidates.length === 0){
-      toast("Couldn't find much history yet - try adding a site by hand below.");
-    }
-  }catch(err){
-    toast("Couldn't read history: " + err.message);
-  }finally{
-    btn.disabled = false; btn.textContent = '🔍 Scan my history';
-  }
-}
-$('#scanBtn').addEventListener('click', scanHistory);
+/* ---------------- curated site list ----------------
+   No plain website can read a user's real browsing history - that needs a
+   browser extension's history permission, which comes with real install
+   friction (developer mode, or a store listing + review). This curated list
+   plus "add a site by hand" gets most of the same value (pick your sites,
+   see them all in one feed) with zero install - just open the page. */
+const CURATED_SITES = [
+  { category: 'News', items: [
+    { name: 'BBC News', domain: 'bbc.co.uk' },
+    { name: 'The Guardian', domain: 'theguardian.com' },
+    { name: 'Sky News', domain: 'news.sky.com' },
+    { name: 'Reuters', domain: 'reuters.com' },
+    { name: 'Al Jazeera', domain: 'aljazeera.com' }
+  ]},
+  { category: 'Tech', items: [
+    { name: 'The Verge', domain: 'theverge.com' },
+    { name: 'Ars Technica', domain: 'arstechnica.com' },
+    { name: 'TechCrunch', domain: 'techcrunch.com' },
+    { name: 'Wired', domain: 'wired.com' },
+    { name: 'ZDNET', domain: 'zdnet.com' }
+  ]},
+  { category: 'Sports', items: [
+    { name: 'BBC Sport', domain: 'bbc.co.uk', path: '/sport' },
+    { name: 'Sky Sports', domain: 'skysports.com' },
+    { name: 'ESPN', domain: 'espn.com' }
+  ]},
+  { category: 'Science & Space', items: [
+    { name: 'NASA', domain: 'nasa.gov' },
+    { name: 'National Geographic', domain: 'nationalgeographic.com' },
+    { name: 'Scientific American', domain: 'scientificamerican.com' }
+  ]}
+];
 
 function faviconUrl(domain){
   return `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
 }
 
-function renderDomainList(){
-  const list = $('#domainList');
-  if(domainCandidates.length === 0){ list.innerHTML = ''; return; }
-  list.innerHTML = domainCandidates.map(d => {
-    const checked = selected.has(d.domain);
-    return `<label class="domain-row" data-domain="${d.domain}">
-      <input type="checkbox" ${checked ? 'checked' : ''}>
-      <img src="${faviconUrl(d.domain)}" alt="">
-      <span class="dn">${d.domain}</span>
-      <span class="dv">${d.visitCount} visits</span>
-    </label>`;
-  }).join('');
-  list.querySelectorAll('.domain-row input').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const row = e.target.closest('.domain-row');
-      const domain = row.getAttribute('data-domain');
-      if(e.target.checked){
-        selected.set(domain, { domain, favicon: faviconUrl(domain), manual: false });
+function siteKey(site){ return site.domain + (site.path || ''); }
+
+function renderCuratedList(){
+  const wrap = $('#curatedList');
+  wrap.innerHTML = CURATED_SITES.map(group => `
+    <div class="cat-group">
+      <div class="cat-label">${group.category}</div>
+      <div class="site-grid">
+        ${group.items.map(site => {
+          const key = siteKey(site);
+          const active = selected.has(key);
+          return `<button type="button" class="site-chip${active ? ' active' : ''}" data-key="${key}">
+            <img src="${faviconUrl(site.domain)}" alt="">
+            <span>${site.name}</span>
+            <span class="tick">✓</span>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.site-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const key = chip.getAttribute('data-key');
+      const site = CURATED_SITES.flatMap(g => g.items).find(s => siteKey(s) === key);
+      if(selected.has(key)){
+        selected.delete(key);
+        chip.classList.remove('active');
       } else {
-        selected.delete(domain);
+        const entry = { domain: key, favicon: faviconUrl(site.domain), manual: !!site.path };
+        if(site.path) entry.originHint = 'https://' + site.domain + site.path;
+        selected.set(key, entry);
+        chip.classList.add('active');
       }
       updateSelCount();
       persistSelected();
@@ -151,33 +155,42 @@ $('#manualAddBtn').addEventListener('click', () => {
 $('#manualUrl').addEventListener('keydown', (e) => { if(e.key === 'Enter') $('#manualAddBtn').click(); });
 
 /* ---------------- persistence ---------------- */
-async function persistSelected(){
-  try{ await chrome.storage.local.set({ [STORAGE_KEY]: Array.from(selected.values()) }); }
+function persistSelected(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(selected.values()))); }
   catch(e){}
 }
-async function restoreSelected(){
+function restoreSelected(){
   try{
-    const data = await chrome.storage.local.get(STORAGE_KEY);
-    (data[STORAGE_KEY] || []).forEach(s => selected.set(s.domain, s));
+    const raw = localStorage.getItem(STORAGE_KEY);
+    (raw ? JSON.parse(raw) : []).forEach(s => selected.set(s.domain, s));
   }catch(e){}
   updateSelCount();
 }
 
 /* ---------------- feed discovery ----------------
-   Extension pages with host_permissions can fetch cross-origin without the
-   CORS restrictions a plain webpage would hit - that's what makes this
-   architecture (vs. a normal website) actually workable without a backend
-   proxy. */
-async function getFeedCache(){
-  try{
-    const data = await chrome.storage.local.get(FEED_CACHE_KEY);
-    return data[FEED_CACHE_KEY] || {};
-  }catch(e){ return {}; }
+   This is a plain website, not a browser extension, so its fetch() calls
+   are subject to normal CORS rules - most sites don't send the headers
+   that would let another origin read their response directly. Routing
+   through a small dedicated proxy sidesteps that. Tried public free
+   CORS-relay services first (allorigins.win etc.) - all failed in testing
+   (down, 403, 522, timeout) within minutes of each other, which isn't bad
+   luck, it's what free/unauthenticated proxy services are like. This one
+   is a tiny Flask route on the same Pi the car/house app already runs on
+   (see feedproxy_server.py), exposed publicly via Tailscale Funnel - a
+   short-term call while this is small; if Feedstorm ever gets real
+   traffic, this should move to its own separate hosting rather than
+   riding on personal home infrastructure. */
+const CORS_PROXY = 'https://magicmirroros.tail655aa9.ts.net/feedproxy?url=';
+function viaProxy(url){ return CORS_PROXY + encodeURIComponent(url); }
+
+function getFeedCache(){
+  try{ return JSON.parse(localStorage.getItem(FEED_CACHE_KEY) || '{}'); }
+  catch(e){ return {}; }
 }
-async function setFeedCacheEntry(key, feedUrl){
-  const cache = await getFeedCache();
+function setFeedCacheEntry(key, feedUrl){
+  const cache = getFeedCache();
   cache[key] = feedUrl;
-  try{ await chrome.storage.local.set({ [FEED_CACHE_KEY]: cache }); }catch(e){}
+  try{ localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(cache)); }catch(e){}
 }
 
 const FEED_LINK_RE = /<link[^>]+(?:rel=["']alternate["'][^>]+type=["']application\/(?:rss|atom)\+xml["']|type=["']application\/(?:rss|atom)\+xml["'][^>]+rel=["']alternate["'])[^>]*>/gi;
@@ -188,7 +201,7 @@ async function fetchText(url, timeoutMs){
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs || 8000);
   try{
-    const res = await fetch(url, { signal: ctrl.signal, credentials: 'omit' });
+    const res = await fetch(viaProxy(url), { signal: ctrl.signal });
     if(!res.ok) return null;
     return await res.text();
   }catch(e){ return null; }
@@ -434,8 +447,27 @@ function postCardHtml(p){
   </a>`;
 }
 
+/* ---------------- PWA install ---------------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  $('#installBtn').hidden = false;
+});
+$('#installBtn').addEventListener('click', async () => {
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  $('#installBtn').hidden = true;
+});
+window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
+
 /* ---------------- init ---------------- */
 (async function init(){
   await restoreSelected();
-  renderDomainList();
+  renderCuratedList();
 })();
