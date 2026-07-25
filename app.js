@@ -43,7 +43,10 @@ $('#manageBtn').addEventListener('click', () => showView('setup'));
 const selected = new Map();
 
 const STORAGE_KEY = 'feedstorm_sources';
-const FEED_CACHE_KEY = 'feedstorm_feedCache';
+// v2: old entries stored a bare string/null per key (no timestamp) - bumping
+// the key cleanly drops any pre-existing cache rather than crashing on the
+// old shape once entries carry a {v, ts} timestamp.
+const FEED_CACHE_KEY = 'feedstorm_feedCache_v2';
 
 /* ---------------- curated site list ----------------
    No plain website can read a user's real browsing history - that needs a
@@ -185,14 +188,28 @@ function restoreSelected(){
 const CORS_PROXY = 'https://feedstorm-proxy.ecksquad.workers.dev/?url=';
 function viaProxy(url){ return CORS_PROXY + encodeURIComponent(url); }
 
+// Cache entries carry a timestamp so a failed lookup can be retried later
+// instead of staying wrong forever - a source that fails once (a proxy
+// outage, a site hiccup) shouldn't be permanently marked dead in every
+// visitor's browser. Successes are trusted much longer than failures.
+const SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const FAILURE_TTL_MS = 60 * 60 * 1000;
+
 function getFeedCache(){
   try{ return JSON.parse(localStorage.getItem(FEED_CACHE_KEY) || '{}'); }
   catch(e){ return {}; }
 }
 function setFeedCacheEntry(key, feedUrl){
   const cache = getFeedCache();
-  cache[key] = feedUrl;
+  cache[key] = { v: feedUrl, ts: Date.now() };
   try{ localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(cache)); }catch(e){}
+}
+function readFeedCacheEntry(cache, key){
+  const entry = cache[key];
+  if(entry === undefined) return undefined;
+  const ttl = entry.v === null ? FAILURE_TTL_MS : SUCCESS_TTL_MS;
+  if(Date.now() - entry.ts > ttl) return undefined;
+  return entry.v;
 }
 
 const FEED_LINK_RE = /<link[^>]+(?:rel=["']alternate["'][^>]+type=["']application\/(?:rss|atom)\+xml["']|type=["']application\/(?:rss|atom)\+xml["'][^>]+rel=["']alternate["'])[^>]*>/gi;
@@ -245,7 +262,8 @@ const KNOWN_FEED_HINTS = {
 async function discoverFeed(origin, hintPath){
   const cacheKey = origin + (hintPath || '');
   const cache = await getFeedCache();
-  if(cache[cacheKey] !== undefined) return cache[cacheKey];
+  const cached = readFeedCacheEntry(cache, cacheKey);
+  if(cached !== undefined) return cached;
 
   let hostname;
   try{ hostname = new URL(origin).hostname.replace(/^www\./, ''); }catch(e){ hostname = ''; }
@@ -445,7 +463,7 @@ function renderPosts(){
     body.innerHTML = `<div class="empty-hint">No posts to show yet - try picking a few more sources.</div>`;
     return;
   }
-  body.innerHTML = `<div class="post-grid">${list.map(postCardHtml).join('')}</div>`;
+  body.innerHTML = `<div class="post-list">${list.map(postCardHtml).join('')}</div>`;
 }
 
 function escapeHtml(s){
