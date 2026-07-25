@@ -7,9 +7,12 @@ with the `history` permission can.
 
 ## What it does
 
-Click the extension icon. It reads your history, groups it by site, ranks
-by how often you've actually visited each one, and shows you a checklist -
-your real top sites, not a guess. Tick the ones you want, click **Add to
+Click the extension icon and you'll see an explicit consent screen first -
+not the scan itself. Only clicking **Show my top sites** actually reads
+your history; **Not now** (or just closing the popup) means it's never
+read at all. After that, it groups your history by site, ranks by how
+often you've actually visited each one, and shows you a checklist - your
+real top sites, not a guess. Tick the ones you want, click **Add to
 Feedstorm**, and it opens the site with those added.
 
 ## The privacy guarantee

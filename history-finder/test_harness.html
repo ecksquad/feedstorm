@@ -23,8 +23,14 @@
     tabs: { create: (opts) => { window.__lastCreatedUrl = opts.url; document.title = 'CREATED:' + opts.url; } }
   };
 </script>
-<div id="list"></div>
-<footer><span id="selCount">0</span><button id="addBtn" disabled>add</button></footer>
+<div id="view-consent" class="view active">
+  <button id="declineBtn">not now</button>
+  <button id="consentBtn">show my top sites</button>
+</div>
+<div id="view-list" class="view">
+  <div id="list"></div>
+  <footer><span id="selCount">0</span><button id="addBtn" disabled>add</button></footer>
+</div>
 <script src="popup.js"></script>
 </body>
 </html>
