@@ -504,8 +504,36 @@ $('#installBtn').addEventListener('click', async () => {
 });
 window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
 
+/* ---------------- import from the history-finder extension ----------------
+   A separate, optional browser extension (history-finder/) can suggest
+   sites from a user's browsing history - kept as its own install, not part
+   of this site, since a plain webpage can never read history itself. It
+   hands off only the domains someone explicitly ticked, as a one-time URL
+   query param on a fresh tab to this page; everything else it found stays
+   in that popup's memory and is gone once it's ticked or the popup closes.
+   The query string is scrubbed immediately below so it doesn't linger in
+   this tab's address bar/history either. */
+function importFromQuery(){
+  const params = new URLSearchParams(location.search);
+  const raw = params.get('import');
+  if(!raw) return 0;
+  const hosts = raw.split(',').map(h => h.trim().toLowerCase().replace(/^www\./, '')).filter(Boolean);
+  let added = 0;
+  hosts.forEach(host => {
+    if(selected.has(host)) return;
+    selected.set(host, { domain: host, favicon: faviconUrl(host), manual: true, originHint: 'https://' + host });
+    added++;
+  });
+  history.replaceState(null, '', location.pathname);
+  if(added) persistSelected();
+  return added;
+}
+
 /* ---------------- init ---------------- */
 (async function init(){
   await restoreSelected();
+  const added = importFromQuery();
   renderCuratedList();
+  updateSelCount();
+  if(added) toast(`Added ${added} site${added === 1 ? '' : 's'} from your browsing history`);
 })();

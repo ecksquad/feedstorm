@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Feedstorm: Find My Sites",
+  "version": "1.0",
+  "description": "Suggests sites for Feedstorm from your browsing history. Nothing is stored or sent anywhere unless you tick it and add it yourself.",
+  "permissions": ["history"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Find sites for Feedstorm from your history",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Find sites for Feedstorm</title>
+<style>
+  :root{
+    --bg:#12152a; --card:#1d2140; --line:#2a2f52; --ink:#f1f0fb; --muted:#9a9ac0;
+    --grad-a:#7c3aed; --grad-b:#22d3ee; --grad-c:#ec4899;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;width:340px;max-height:520px;overflow-y:auto;background:var(--bg);color:var(--ink);
+    font-family:system-ui,sans-serif;font-size:13px}
+  header{padding:14px 16px 10px;position:sticky;top:0;background:var(--bg);z-index:1;
+    border-bottom:1px solid var(--line)}
+  h1{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:6px}
+  h1 b{background:linear-gradient(120deg,var(--grad-a),var(--grad-b) 55%,var(--grad-c));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  p.note{margin:0;color:var(--muted);line-height:1.5;font-size:12px}
+  p.note strong{color:var(--ink)}
+  #list{padding:6px 10px}
+  .row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-radius:10px;cursor:pointer}
+  .row:hover{background:var(--card)}
+  .row input{flex:none}
+  .row .host{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .count{color:var(--muted);font-size:11px;flex:none}
+  .empty{padding:24px 16px;color:var(--muted);text-align:center}
+  footer{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+    padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .sel{color:var(--muted);font-size:12px}
+  button{border:none;border-radius:999px;padding:9px 16px;font:inherit;font-weight:600;font-size:12.5px;
+    cursor:pointer;background:linear-gradient(120deg,var(--grad-a),var(--grad-c));color:#fff}
+  button:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+  <header>
+    <h1>⚡ <b>Feedstorm</b> · Find my sites</h1>
+    <p class="note">Your most-visited sites, ranked by how often you've been there. Nothing here is saved
+      or sent anywhere - <strong>tick what you want, and anything left unticked disappears the moment you
+      close this popup.</strong></p>
+  </header>
+  <div id="list"><div class="empty">Scanning your history…</div></div>
+  <footer>
+    <span class="sel"><b id="selCount">0</b> selected</span>
+    <button id="addBtn" disabled>Add to Feedstorm</button>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

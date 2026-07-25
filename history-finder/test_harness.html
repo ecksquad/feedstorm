@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>popup.js test harness</title></head>
+<body>
+<script>
+  // Mock chrome.history.search + chrome.tabs.create so popup.js's real logic
+  // runs unmodified against fake history data, without needing a real
+  // extension context (which command-line --load-extension isn't reliably
+  // providing in this environment).
+  const FAKE_HISTORY = [
+    { url: 'https://www.bbc.co.uk/news/123', visitCount: 40 },
+    { url: 'https://www.bbc.co.uk/sport/456', visitCount: 12 },
+    { url: 'https://kotaku.com/some-article', visitCount: 8 },
+    { url: 'https://kotaku.com/another', visitCount: 3 },
+    { url: 'https://mail.google.com/mail/u/0/', visitCount: 90 },
+    { url: 'https://some-adult-site.example/page', visitCount: 5 },
+    { url: 'chrome-extension://abcdefghijklmnop/options.html', visitCount: 20 },
+    { url: 'chrome://settings/', visitCount: 15 },
+    { url: 'https://theguardian.com/uk', visitCount: 25 }
+  ];
+  window.chrome = {
+    history: { search: (opts) => Promise.resolve(FAKE_HISTORY) },
+    tabs: { create: (opts) => { window.__lastCreatedUrl = opts.url; document.title = 'CREATED:' + opts.url; } }
+  };
+</script>
+<div id="list"></div>
+<footer><span id="selCount">0</span><button id="addBtn" disabled>add</button></footer>
+<script src="popup.js"></script>
+</body>
+</html>

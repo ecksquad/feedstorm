@@ -53,6 +53,13 @@ A handful of sites (confirmed: Engadget, Reddit's `.rss` endpoint) return
 - `manifest.json` / `sw.js` - installable as a PWA (add to home screen),
   works offline for the app shell.
 - `gen_icons.ps1` - regenerates everything in `icons/` if the design changes.
+- `history-finder/` - an optional, separate companion extension that
+  suggests sites from your browsing history. Kept out of the main site on
+  purpose: a plain webpage can never read history, only an extension with
+  that permission can, and this keeps that capability isolated to an
+  install you opt into separately. See `history-finder/README.md` for how
+  it works and its privacy guarantee - anything you don't pick is never
+  stored or sent anywhere, by construction, not just by policy.
 
 ### Deploying the worker
 
