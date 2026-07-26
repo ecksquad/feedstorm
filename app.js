@@ -153,9 +153,38 @@ $('#manualAddBtn').addEventListener('click', () => {
   input.value = '';
   updateSelCount();
   persistSelected();
+  renderAddedSites();
   toast('Added ' + key);
 });
 $('#manualUrl').addEventListener('keydown', (e) => { if(e.key === 'Enter') $('#manualAddBtn').click(); });
+
+// A manually-added or history-imported site has no fixed home in the
+// curated categories above, so without this it just bumps the "sources
+// selected" counter with no lasting sign it actually landed anywhere -
+// this gives it the same kind of visible, removable chip the curated
+// sites get, instead of disappearing into just a number.
+function isCuratedKey(key){
+  return CURATED_SITES.some(group => group.items.some(site => siteKey(site) === key));
+}
+function renderAddedSites(){
+  const wrap = $('#addedSites');
+  const added = Array.from(selected.entries()).filter(([key]) => !isCuratedKey(key));
+  wrap.innerHTML = added.map(([key, entry]) => `
+    <button type="button" class="site-chip added-chip" data-key="${key}" title="Remove">
+      <img src="${entry.favicon}" alt="">
+      <span>${key}</span>
+      <span class="remove">✕</span>
+    </button>
+  `).join('');
+  wrap.querySelectorAll('.added-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      selected.delete(chip.getAttribute('data-key'));
+      updateSelCount();
+      persistSelected();
+      renderAddedSites();
+    });
+  });
+}
 
 /* ---------------- persistence ---------------- */
 function persistSelected(){
@@ -625,6 +654,7 @@ function importFromQuery(){
   await restoreSelected();
   const added = importFromQuery();
   renderCuratedList();
+  renderAddedSites();
   updateSelCount();
   if(added) toast(`Added ${added} site${added === 1 ? '' : 's'} from your browsing history`);
 })();

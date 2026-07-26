@@ -103,6 +103,13 @@
     background:linear-gradient(120deg,var(--grad-a),var(--grad-c))}
   .site-chip.active .tick{display:inline}
 
+  .added-sites{margin-top:14px}
+  .added-sites:empty{display:none}
+  .added-chip{border-color:transparent;color:#fff;
+    background:linear-gradient(120deg,var(--grad-a),var(--grad-c))}
+  .added-chip .remove{font-size:13px;opacity:.85}
+  .added-chip:hover .remove{opacity:1}
+
   .manual-row{display:flex;gap:8px;margin-top:16px}
   .manual-row input{flex:1;min-width:0;background:var(--card-2);border:1px solid var(--line);
     color:var(--ink);border-radius:12px;padding:11px 13px;font:inherit;font-size:13.5px}
@@ -215,6 +222,7 @@
         <input type="text" id="manualUrl" placeholder="e.g. arstechnica.com, reddit.com/r/technology…">
         <button class="pill-btn" id="manualAddBtn">Add</button>
       </div>
+      <div id="addedSites" class="site-grid added-sites"></div>
     </div>
 
     <div class="setup-footer">
