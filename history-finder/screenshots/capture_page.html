@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>store screenshot capture (not shipped - marketing asset only)</title>
+<style>
+  html,body{margin:0;width:1280px;height:800px;overflow:hidden;
+    background:linear-gradient(135deg,#7c3aed,#22d3ee 55%,#ec4899);
+    font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center}
+  .browser-chrome{width:900px;background:#e8eaf6;border-radius:14px;box-shadow:0 40px 100px rgba(0,0,0,.35);
+    overflow:hidden}
+  .toolbar{background:#d7dbee;padding:10px 14px;display:flex;align-items:center;gap:8px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .addressbar{flex:1;background:#fff;border-radius:8px;padding:7px 12px;font-size:12px;color:#5c5f82;
+    margin-left:10px}
+  .page{background:#fff;height:600px;position:relative}
+  .popup-anchor{position:absolute;top:10px;right:24px}
+
+  /* --- popup.html's own styles, verbatim, for an accurate screenshot --- */
+  :root{
+    --bg:#12152a; --card:#1d2140; --line:#2a2f52; --ink:#f1f0fb; --muted:#9a9ac0;
+    --grad-a:#7c3aed; --grad-b:#22d3ee; --grad-c:#ec4899; --good:#22d3ee;
+  }
+  .popup-panel *{box-sizing:border-box}
+  .popup-panel{margin:0;width:360px;max-height:560px;overflow-y:auto;background:var(--bg);color:var(--ink);
+    font-family:system-ui,sans-serif;font-size:13px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .popup-panel header{padding:14px 16px 10px;position:sticky;top:0;background:var(--bg);z-index:1;
+    border-bottom:1px solid var(--line);border-radius:12px 12px 0 0}
+  .popup-panel h1{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:6px}
+  .popup-panel h1 b{background:linear-gradient(120deg,var(--grad-a),var(--grad-b) 55%,var(--grad-c));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .popup-panel p.note{margin:0;color:var(--muted);line-height:1.5;font-size:12px}
+  .popup-panel .view{display:none}
+  .popup-panel .view.active{display:block}
+  .popup-panel .consent{padding:18px 16px}
+  .popup-panel .consent .lede{font-size:13px;line-height:1.6;color:var(--ink);margin:0 0 14px}
+  .popup-panel .guarantee{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    margin-bottom:16px}
+  .popup-panel .guarantee ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px}
+  .popup-panel .guarantee li{font-size:12px;line-height:1.5;color:var(--muted)}
+  .popup-panel .guarantee li b{color:var(--ink)}
+  .popup-panel .consent-actions{display:flex;gap:8px}
+  .popup-panel .btn-primary{flex:1;border:none;border-radius:999px;padding:11px 16px;font:inherit;font-weight:700;
+    font-size:13px;cursor:pointer;background:linear-gradient(120deg,var(--grad-a),var(--grad-c));color:#fff}
+  .popup-panel .btn-secondary{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;
+    padding:11px 16px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+  .popup-panel #list{padding:6px 10px}
+  .popup-panel .row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-radius:10px;cursor:pointer}
+  .popup-panel .row .host{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .popup-panel .row .count{color:var(--muted);font-size:11px;flex:none}
+  .popup-panel footer{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+    padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:0 0 12px 12px}
+  .popup-panel .sel{color:var(--muted);font-size:12px}
+  .popup-panel button{border:none;border-radius:999px;padding:9px 16px;font:inherit;font-weight:600;font-size:12.5px;
+    cursor:pointer;background:linear-gradient(120deg,var(--grad-a),var(--grad-c));color:#fff}
+  .popup-panel button:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="browser-chrome">
+  <div class="toolbar">
+    <div class="dot" style="background:#ff5f57"></div>
+    <div class="dot" style="background:#febc2e"></div>
+    <div class="dot" style="background:#28c840"></div>
+    <div class="addressbar">ecksquad.github.io/feedstorm</div>
+  </div>
+  <div class="page">
+    <div class="popup-anchor">
+      <div class="popup-panel" id="panel">
+        <header>
+          <h1>⚡ <b>Feedstorm</b> · Find my sites</h1>
+        </header>
+        <section class="view active" id="view-consent">
+          <div class="consent">
+            <p class="lede">To suggest sites, Feedstorm needs to look at your browsing history for a moment -
+              here's exactly what that does and doesn't mean.</p>
+            <div class="guarantee">
+              <ul>
+                <li><b>Nothing is recorded.</b> The list this builds only ever exists on this screen, in this
+                  popup's memory - it's gone the instant you close this window, whether you pick anything or not.</li>
+                <li><b>Nothing is sent anywhere.</b> This extension has no server, makes no network requests, and
+                  can't save to disk even if it wanted to - it only reads your history, right here, right now.</li>
+                <li><b>Only what you tick goes anywhere at all</b> - and even then, only as far as opening
+                  Feedstorm in a new tab on your own machine.</li>
+                <li><b>The sites you do add can't see or store anything about you.</b> Feedstorm fetches their
+                  latest posts through its own relay, so the sites themselves never see your device.</li>
+              </ul>
+            </div>
+            <div class="consent-actions">
+              <button class="btn-secondary" id="declineBtn">Not now</button>
+              <button class="btn-primary" id="consentBtn">Show my top sites</button>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="view-list">
+          <p class="note" style="padding:12px 16px 10px">Ranked by how often you've actually been there.</p>
+          <div id="list"></div>
+          <footer>
+            <span class="sel"><b id="selCount">3</b> selected</span>
+            <button id="addBtn">Add to Feedstorm</button>
+          </footer>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Static, hand-set content for the screenshot - not popup.js's live logic.
+  const rows = [
+    ['bbc.co.uk', 62, true], ['theguardian.com', 41, true], ['theverge.com', 33, true],
+    ['techcrunch.com', 27, false], ['arstechnica.com', 19, false], ['news.sky.com', 14, false]
+  ];
+  document.getElementById('list').innerHTML = rows.map(([host,count,checked]) => `
+    <label class="row">
+      <input type="checkbox" ${checked ? 'checked' : ''}>
+      <span class="host">${host}</span>
+      <span class="count">${count} visits</span>
+    </label>
+  `).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedstorm: Find My Sites — Privacy Policy</title>
+<style>
+  body{max-width:640px;margin:0 auto;padding:32px 20px 80px;font-family:system-ui,sans-serif;
+    line-height:1.6;color:#181a2e;background:#eef0fa}
+  h1{font-size:22px}
+  h2{font-size:16px;margin-top:32px}
+  .updated{color:#5c5f82;font-size:13px}
+  ul{padding-left:20px}
+  a{color:#7c3aed}
+</style>
+</head>
+<body>
+<h1>Feedstorm: Find My Sites — Privacy Policy</h1>
+<p class="updated">Last updated: 2026-07-26</p>
+
+<p>Feedstorm: Find My Sites is a browser extension with a single purpose: reading your
+browsing history, on your device, to suggest sites you might want to follow in
+<a href="https://ecksquad.github.io/feedstorm/">Feedstorm</a> — a separate news reader website.
+This page explains exactly what the extension does with your data, in full.</p>
+
+<h2>What data it accesses</h2>
+<p>Your browsing history, via the browser's <code>history</code> API — and nothing else. The
+extension requests no other permission.</p>
+
+<h2>When it accesses it</h2>
+<p>Only after you open the extension's popup and explicitly click <strong>"Show my top
+sites"</strong> on the consent screen shown first. Installing the extension does not, by
+itself, cause your history to be read. Clicking "Not now," or just closing the popup
+without clicking "Show my top sites," means your history is never read at all.</p>
+
+<h2>Where that data goes</h2>
+<p>Nowhere but your own screen. Specifically:</p>
+<ul>
+  <li>The extension has no server, no analytics, and makes no network requests of any
+    kind. It cannot send your history anywhere even if it wanted to.</li>
+  <li>It does not request the <code>storage</code> permission and never calls
+    <code>chrome.storage</code> — it cannot save anything to disk.</li>
+  <li>The ranked list of sites it builds exists only in memory, inside the popup
+    document. A browser extension popup is destroyed the instant it closes; nothing
+    persists between openings.</li>
+  <li>The <em>only</em> data that ever leaves the popup is the specific site domains you
+    tick and confirm by clicking "Add to Feedstorm" — and even then, it only travels as
+    far as the address bar of a new browser tab opened on your own machine, pointed at
+    Feedstorm's website. Nothing crosses the network.</li>
+</ul>
+
+<h2>What you see but don't pick</h2>
+<p>Any site the scan finds that you don't tick is discarded the moment the popup closes,
+with no exception. The list itself is not filtered by what a site is about — every
+site you've actually visited is shown the same way, ranked only by how often you've
+been there. You decide what to keep by ticking it, not by anything being hidden from
+you or pre-judged on your behalf.</p>
+
+<h2>Third parties</h2>
+<p>None. No analytics providers, no advertising networks, no data brokers. The source
+code is public: <a href="https://github.com/ecksquad/feedstorm/tree/main/history-finder">github.com/ecksquad/feedstorm/tree/main/history-finder</a>.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: open an issue at
+<a href="https://github.com/ecksquad/feedstorm/issues">github.com/ecksquad/feedstorm/issues</a>.</p>
+</body>
+</html>
