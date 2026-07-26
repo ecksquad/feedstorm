@@ -33,10 +33,19 @@ function hostnameOf(url){
 }
 
 async function scan(){
+  // chrome.history.search with an empty text query returns unique pages
+  // ordered by most recent visit time, up to maxResults - NOT "top N by
+  // total visit count." A low maxResults silently truncates to only the
+  // most-recently-visited pages before we ever get to rank by frequency,
+  // which can hide a genuinely high-visit-count site if it just hasn't been
+  // opened recently (confirmed against a real profile: a top-10-by-visits
+  // site was invisible at maxResults 5000, sitting past the recency
+  // cutoff). Set high enough to capture effectively all of a normal
+  // history in one call rather than only its most recent slice.
   const items = await chrome.history.search({
     text: '',
     startTime: 0,
-    maxResults: 5000
+    maxResults: 100000
   });
 
   const counts = new Map();
