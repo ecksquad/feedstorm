@@ -57,9 +57,14 @@ function render(ranked){
     list.innerHTML = '<div class="empty">No browsing history found on this profile.</div>';
     return;
   }
+  // Pre-checked by default: most people want most of their top sites, so this
+  // is "untick the rare one you don't want" instead of "tick every one you
+  // do" - fewer clicks for the common case. Still a real choice, not
+  // auto-added: nothing happens until "Add to Feedstorm" is clicked, and
+  // unticking here still means a site is never added at all.
   list.innerHTML = ranked.map(([host, count]) => `
     <label class="row">
-      <input type="checkbox" data-host="${host}">
+      <input type="checkbox" data-host="${host}" checked>
       <span class="host">${host}</span>
       <span class="count">${count} visits</span>
     </label>
@@ -68,6 +73,7 @@ function render(ranked){
   list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     cb.addEventListener('change', updateFooter);
   });
+  updateFooter();
 }
 
 function updateFooter(){

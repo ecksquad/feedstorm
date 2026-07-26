@@ -22,19 +22,20 @@ top sites, not a guess.
 How it works: click the toolbar icon and you'll see a consent screen
 first, not a scan. Only clicking "Show my top sites" reads your history;
 closing the popup or clicking "Not now" means it's never read at all.
-After that, it ranks your history by site and shows you a checklist.
-Tick what you want, click "Add to Feedstorm," and it opens with those
-sites added.
+After that, it ranks your history by site and shows you a checklist with
+your top sites already selected - untick anything you'd rather leave out,
+then click "Add to Feedstorm" and it opens with those sites added.
 
 Nothing is ever recorded. This extension has no server and makes no
 network requests of any kind - it can't send your history anywhere even
 if it wanted to. It doesn't request the storage permission either, so it
 can't save anything to disk. The ranked list only exists in the popup's
 own memory, which is destroyed the moment the popup closes - anything you
-don't tick disappears with it, guaranteed by how a browser extension
+untick (or the whole list, if you close without clicking "Add to
+Feedstorm") disappears with it, guaranteed by how a browser extension
 popup works, not by a policy we're promising to follow.
 
-Full privacy policy: [privacy.html URL once hosted]
+Full privacy policy: https://ecksquad.github.io/feedstorm/history-finder/privacy.html
 Source code (fully open): github.com/ecksquad/feedstorm/tree/main/history-finder
 
 ## Single purpose description (Chrome requires this in its own field)
