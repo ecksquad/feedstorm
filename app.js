@@ -535,13 +535,33 @@ function renderPosts(){
   }
 
   const hero = list[0];
-  const featured = list.slice(1, 5);
-  const rest = list.slice(5);
+  const rest = list.slice(1);
+
+  // A magazine keeps varying its layout as you keep reading, not just once
+  // at the very top followed by an unbroken list - with hundreds of posts,
+  // a single featured cluster up front meant 98% of the actual scrolling
+  // experience was still flat rows. Repeats a (featured cluster, row run)
+  // rhythm all the way down instead of only once.
+  const FEATURED_SIZE = 3;
+  const ROW_RUN = 8;
+  const chunks = [];
+  let i = 0, firstChunk = true;
+  while(i < rest.length){
+    const featuredCount = firstChunk ? 4 : FEATURED_SIZE;
+    const featured = rest.slice(i, i + featuredCount);
+    i += featuredCount;
+    const rows = rest.slice(i, i + ROW_RUN);
+    i += ROW_RUN;
+    chunks.push({ featured, rows });
+    firstChunk = false;
+  }
 
   body.innerHTML = `
     ${hero ? postCardHtml(hero, 'hero') : ''}
-    ${featured.length ? `<div class="post-featured-grid">${featured.map(p => postCardHtml(p, 'featured')).join('')}</div>` : ''}
-    ${rest.length ? `<div class="post-list">${rest.map(p => postCardHtml(p, 'row')).join('')}</div>` : ''}
+    ${chunks.map(chunk => `
+      ${chunk.featured.length ? `<div class="post-featured-grid">${chunk.featured.map(p => postCardHtml(p, 'featured')).join('')}</div>` : ''}
+      ${chunk.rows.length ? `<div class="post-list">${chunk.rows.map(p => postCardHtml(p, 'row')).join('')}</div>` : ''}
+    `).join('')}
   `;
 }
 
