@@ -7,29 +7,40 @@ function New-Icon([int]$size, [string]$path, [double]$scale){
   $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
   $g.Clear([System.Drawing.Color]::Transparent)
 
-  # background: purple -> pink diagonal gradient circle, matching the app's
-  # storm-gradient identity. $scale < 1 shrinks the circle with transparent
-  # padding around it - needed for maskable icons so Android's circular crop
-  # doesn't clip the bolt.
+  # Rounded-square tile in the same teal accent used by the sibling BYD app
+  # (Stormbull), not a gradient circle - one fixed brand color, no theme
+  # dependency, since a static PNG can't react to light/dark mode. $scale < 1
+  # shrinks the tile with transparent padding for maskable icons, so
+  # Android's circular crop doesn't clip the bolt.
   $d = $size * $scale
   $off = ($size - $d) / 2
-  $rect = New-Object System.Drawing.Rectangle 0, 0, $size, $size
-  $c1 = [System.Drawing.Color]::FromArgb(255, 124, 58, 237)   # #7c3aed
-  $c2 = [System.Drawing.Color]::FromArgb(255, 236, 72, 153)   # #ec4899
-  $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush($rect, $c1, $c2, 45)
-  $g.FillEllipse($brush, $off, $off, $d, $d)
+  $radius = $d * 0.23
 
-  # lightning bolt, white, drawn as a polygon scaled to the icon size
+  $tile = New-Object System.Drawing.Color
+  $tile = [System.Drawing.Color]::FromArgb(255, 51, 224, 194)   # #33e0c2
+  $tileBrush = New-Object System.Drawing.SolidBrush($tile)
+
+  $path2 = New-Object System.Drawing.Drawing2D.GraphicsPath
+  $r2 = $radius * 2
+  $path2.AddArc($off, $off, $r2, $r2, 180, 90)
+  $path2.AddArc($off + $d - $r2, $off, $r2, $r2, 270, 90)
+  $path2.AddArc($off + $d - $r2, $off + $d - $r2, $r2, $r2, 0, 90)
+  $path2.AddArc($off, $off + $d - $r2, $r2, $r2, 90, 90)
+  $path2.CloseFigure()
+  $g.FillPath($tileBrush, $path2)
+
+  # bolt cutout, dark teal ink (#022420) - same polygon proportions as the
+  # header SVG mark, so the favicon/app icon matches what's in the page
   $pts = @(
-    [System.Drawing.PointF]::new($off + $d*0.56, $off + $d*0.10),
-    [System.Drawing.PointF]::new($off + $d*0.24, $off + $d*0.58),
-    [System.Drawing.PointF]::new($off + $d*0.46, $off + $d*0.58),
-    [System.Drawing.PointF]::new($off + $d*0.40, $off + $d*0.92),
-    [System.Drawing.PointF]::new($off + $d*0.78, $off + $d*0.40),
-    [System.Drawing.PointF]::new($off + $d*0.54, $off + $d*0.40)
+    [System.Drawing.PointF]::new($off + $d*0.567, $off + $d*0.20),
+    [System.Drawing.PointF]::new($off + $d*0.30,  $off + $d*0.533),
+    [System.Drawing.PointF]::new($off + $d*0.467, $off + $d*0.533),
+    [System.Drawing.PointF]::new($off + $d*0.40,  $off + $d*0.833),
+    [System.Drawing.PointF]::new($off + $d*0.70,  $off + $d*0.467),
+    [System.Drawing.PointF]::new($off + $d*0.533, $off + $d*0.467)
   )
-  $white = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::White)
-  $g.FillPolygon($white, $pts)
+  $inkBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 2, 36, 32))  # #022420
+  $g.FillPolygon($inkBrush, $pts)
 
   $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
   $g.Dispose(); $bmp.Dispose()

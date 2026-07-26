@@ -21,11 +21,13 @@
     --bg:#0e0e10; --bg-2:#161618; --card:#1a1a1d; --card-2:#212124;
     --line:#2a2a2e; --ink:#f2f2f3; --muted:#9b9ba3; --faint:#68686f;
     --grad-a:#7c3aed; --grad-b:#22d3ee; --grad-c:#ec4899;
+    --accent:#33e0c2; --accent-ink:#022420;
     --shadow:0 8px 24px rgba(0,0,0,.35);
   }
   :root[data-theme="light"]{
     --bg:#ffffff; --bg-2:#f7f7f8; --card:#ffffff; --card-2:#f2f2f4;
     --line:#e5e5e8; --ink:#18181b; --muted:#6b6b74; --faint:#9a9aa2;
+    --accent:#0e9c86; --accent-ink:#ffffff;
     --shadow:0 8px 24px rgba(0,0,0,.08);
   }
   *{box-sizing:border-box}
@@ -37,9 +39,9 @@
 
   header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
   .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
-    display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
-  .logo .bolt{font-size:20px;filter:drop-shadow(0 0 10px color-mix(in srgb, var(--grad-b) 70%, transparent))}
-  .logo b{background:linear-gradient(120deg,var(--grad-a),var(--grad-b) 55%,var(--grad-c));
+    display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+  .logo .mark{flex:none;display:block}
+  .logo b{background:linear-gradient(100deg, var(--ink) 35%, var(--accent) 130%);
     -webkit-background-clip:text;background-clip:text;color:transparent}
   .h-actions{margin-left:auto;display:flex;gap:8px}
   .icon-btn{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);
@@ -175,7 +177,13 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="logo"><span class="bolt">⚡</span><b>Feedstorm</b></div>
+    <div class="logo">
+      <svg class="mark" width="28" height="28" viewBox="0 0 30 30" aria-hidden="true">
+        <rect width="30" height="30" rx="7" fill="var(--accent)"/>
+        <path d="M17 6 9 16h5L12 25l9-11h-5z" fill="var(--accent-ink)"/>
+      </svg>
+      <b>Feedstorm</b>
+    </div>
     <div class="h-actions">
       <button class="pill-btn" id="manageBtn" hidden>⚙️ Manage sources</button>
       <button class="pill-btn" id="installBtn" hidden>📲 Install</button>
